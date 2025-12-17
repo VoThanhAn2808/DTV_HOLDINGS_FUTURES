@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Equity DTV HOLDINGS</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *{box-sizing:border-box}
 
@@ -126,21 +125,6 @@ h1{
 .gold{color:#f2b705}
 .blue{color:#1565c0}
 
-/* ====== BOX ====== */
-.chart-box,.table-box{
-    background:#ffffff;
-    border:1px solid #ddd;
-    border-radius:10px;
-    padding:20px;
-    margin-bottom:20px;
-}
-
-.chart-box h3,.table-box h3{
-    margin:0 0 15px;
-    font-size:18px;
-    color:#222;
-}
-
 /* ====== PERIOD SELECT ====== */
 .period-filter{
     margin-bottom:15px;
@@ -238,11 +222,6 @@ tr:nth-child(even){background:#fafafa}
 }
 .notification.show{display:block}
 .notification.error{background:#c62828}
-
-/* ẨN SETUP NHẬP LINK */
-#setupBanner {
-    display: none !important;
-}
 
 /* Ẩn bảng chi tiết */
 #detailBox {
@@ -389,8 +368,6 @@ const FIXED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS6rHYACu
 
 localStorage.setItem('binanceCsvUrl', FIXED_CSV_URL);
 
-
-let eqPnLChart;
 let autoRefreshInterval;
 let isAutoRefresh = true;
 let loadCount = 0;
@@ -531,7 +508,6 @@ async function forceRefresh() {
                 method = "Direct Fetch";
             }
         } catch(e) {
-            console.log("Method 1 failed:", e);
         }
         
         // Method 2: CORS Proxy
@@ -545,7 +521,6 @@ async function forceRefresh() {
                     method = "CORS Proxy";
                 }
             } catch(e) {
-                console.log("Method 2 failed:", e);
             }
         }
         
@@ -560,7 +535,6 @@ async function forceRefresh() {
                     method = "AllOrigins Proxy";
                 }
             } catch(e) {
-                console.log("Method 3 failed:", e);
             }
         }
         
@@ -718,8 +692,6 @@ function extractMonthsAndYearsFromPeriod(period) {
         }
     }
     
-    console.log(`Extract from period "${periodStr}": months=[${months}], years=[${years}]`);
-    
     return { months, years };
 }
 
@@ -773,8 +745,7 @@ function updateMonthsByYear() {
     
     // Sắp xếp và thêm vào select
     const monthsArray = Array.from(monthsInYear).sort((a, b) => a - b);
-    
-    console.log('Months for year', selectedYear, ':', monthsArray);
+
     
     monthsArray.forEach(month => {
         const option = document.createElement('option');
@@ -827,8 +798,7 @@ function updatePeriodsByMonth() {
         // Nếu chọn cả năm và tháng
         return periodInfo.year === year && periodInfo.month === month;
     });
-    
-    console.log('Filtered periods:', filteredPeriods);
+
     
     // Thêm các kỳ đã filter vào select
     filteredPeriods.forEach(period => {
@@ -914,7 +884,6 @@ function processDashboard(data) {
                 const otherInfo = periodToMonthYear[otherPeriod];
                 if (otherInfo && otherInfo.month === periodInfo.month && otherInfo.year) {
                     periodInfo.year = otherInfo.year;
-                    console.log(`Inferred year ${otherInfo.year} for period "${period}" from "${otherPeriod}"`);
                     break;
                 }
             }
@@ -928,8 +897,7 @@ function processDashboard(data) {
             availableYears.add(periodInfo.year);
         }
     });
-    
-    console.log('Period to Month/Year mapping after processing:', periodToMonthYear);
+
     
     // Pass 3: Xử lý dữ liệu chính
     data.forEach(r => {
@@ -996,9 +964,6 @@ function processDashboard(data) {
     // Lưu tất cả các kỳ đã sắp xếp
     allPeriodsArray = Array.from(allPeriods).sort();
     
-    console.log('Available months:', Array.from(availableMonths).sort());
-    console.log('Available years:', Array.from(availableYears).sort());
-    console.log('All periods:', allPeriodsArray);
     
     // Cập nhật select năm, tháng và kỳ
     updateYearSelect();
@@ -1050,29 +1015,6 @@ function processDashboard(data) {
     updateRankTable();
 }
 
-function updatePeriodSelect(periods) {
-    const select = document.getElementById('periodSelect');
-    
-    // Lưu giá trị hiện tại
-    const currentValue = select.value;
-    
-    // Xóa các option cũ (trừ "Tổng")
-    select.innerHTML = '<option value="all">Tổng (Tất cả kỳ)</option>';
-    
-    // Thêm các kỳ mới
-    periods.forEach(period => {
-        const option = document.createElement('option');
-        option.value = period;
-        option.textContent = period;
-        select.appendChild(option);
-    });
-    
-    // Khôi phục giá trị đã chọn nếu còn tồn tại
-    if (Array.from(select.options).some(opt => opt.value === currentValue)) {
-        select.value = currentValue;
-    }
-}
-
 function updateYearSelect() {
     const yearSelect = document.getElementById('yearSelect');
     
@@ -1085,7 +1027,6 @@ function updateYearSelect() {
     // Chuyển Set thành Array và sắp xếp (năm mới nhất trước)
     let yearsArray = Array.from(availableYears).sort((a, b) => b - a);
     
-    console.log('Các năm hiển thị trong select:', yearsArray);
     
     // Thêm các năm vào select
     yearsArray.forEach(year => {
@@ -1135,12 +1076,9 @@ function updateRankTable() {
             return periodInfo.year === year && periodInfo.month === month;
         });
         
-        console.log('Periods for rank table:', filteredPeriods);
-        
         if (filteredPeriods.length === 0) {
             // Không có dữ liệu - ẩn bảng
             rankTableBox.style.display = 'none';
-            console.log('No data found - hiding rank table');
             return;
         }
         
@@ -1149,7 +1087,6 @@ function updateRankTable() {
         
         if (Object.keys(summaryData).length === 0) {
             rankTableBox.style.display = 'none';
-            console.log('Empty summary data - hiding rank table');
             return;
         }
         
@@ -1163,7 +1100,6 @@ function updateRankTable() {
         } else {
             // Không có dữ liệu - ẩn bảng
             rankTableBox.style.display = 'none';
-            console.log('No data for period', selectedPeriod, '- hiding rank table');
         }
     }
 }
