@@ -427,9 +427,9 @@ function saveCsvUrl() {
         return;
     }
     
-    if (!url.includes('docs.google.com')) {
-        showNotification('⚠️ Link không hợp lệ! Phải là link từ Google Sheets', 'error');
-        return;
+    if (!url.includes('export?format=csv') && !url.includes('output=csv')) {
+    showNotification('⚠️ Link phải là CSV Google Sheets!', 'error');
+    return;
     }
     
     CSV_URL = url;
@@ -444,7 +444,7 @@ function saveCsvUrl() {
 }
 
 function parseCSV(text) {
-    const lines = text.trim().split('\n');
+    const lines = text.replace(/\r/g, '').split('\n');
     const result = [];
     
     for (let line of lines) {
@@ -514,14 +514,11 @@ async function forceRefresh() {
         
         // Method 1: Fetch trực tiếp
         try {
-            const directUrl = `${CSV_URL}&t=${timestamp}&r=${random}`;
-            const response = await fetch(directUrl, {
-                method: 'GET',
-                mode: 'cors',
-                credentials: 'omit',
-                headers: {
-                    'Accept': 'text/csv, text/plain, */*'
-                }
+            const directUrl = CSV_URL.replace(/(&|\?)_=\d+/, '');
+            const finalUrl = directUrl + (directUrl.includes('?') ? '&' : '?') + 'nocache=' + Date.now();
+            const response = await fetch(finalUrl, {
+                cache: 'no-store',
+                mode: 'cors'
             });
             
             if (response.ok) {
