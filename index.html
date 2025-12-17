@@ -385,6 +385,11 @@ tr:nth-child(even){background:#fafafa}
 
 <script>
 
+const FIXED_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS6rHYACuA1J24SMrOu-cmdZCFWt094OjyfgD3IEh_cqAao_4r_pebRGgLy7wQpf93jWENp-C6noKuW/pub?output=csv";
+
+localStorage.setItem('binanceCsvUrl', FIXED_CSV_URL);
+
+
 let eqPnLChart;
 let autoRefreshInterval;
 let isAutoRefresh = true;
