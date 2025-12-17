@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Equity DTV HOLDINGS</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box}
+
+/* ====== BODY ====== */
+body{
+    margin:0;
+    font-family:'Segoe UI',Tahoma;
+    background:#f4f6f5;
+    color:#222;
+}
+
+/* ====== HEADER ====== */
+header{
+    background:#ffffff;
+    padding:20px;
+    text-align:center;
+    border-bottom:4px solid #f2b705;
+}
+
+h1{
+    margin:0;
+    font-size:26px;
+    font-weight:700;
+    color:#222;
+}
+
+.subtitle{
+    margin-top:6px;
+    font-size:14px;
+    color:#2e7d32;
+    font-weight:600;
+}
+
+/* ====== BUTTON ====== */
+.controls{
+    margin-top:15px;
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    padding:10px 18px;
+    border:none;
+    border-radius:6px;
+    font-weight:600;
+    cursor:pointer;
+}
+
+.btn-primary{background:#f2b705;color:#000}
+.btn-secondary{background:#444;color:#fff}
+.btn-warning{background:#ddd;color:#000}
+
+/* ====== STATUS ====== */
+.status{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:#f7f7f7;
+    padding:6px 12px;
+    border-radius:20px;
+    font-size:13px;
+}
+
+.status-dot{
+    width:10px;height:10px;border-radius:50%;
+}
+.status-dot.success{background:#2e7d32}
+.status-dot.loading{background:#f2b705}
+.status-dot.error{background:#c62828}
+
+/* ====== CONTAINER ====== */
+.container{
+    width:96%;
+    max-width:1400px;
+    margin:20px auto;
+}
+
+/* ====== INFO ====== */
+.info-banner{
+    background:#ffffff;
+    border:1px solid #ddd;
+    padding:15px;
+    border-radius:8px;
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+/* ====== SUMMARY ====== */
+.summary{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin:20px 0;
+}
+
+.summary-card{
+    background:#ffffff;
+    border:1px solid #ddd;
+    padding:18px;
+    border-radius:10px;
+}
+
+.summary-card .label{
+    font-size:13px;
+    color:#555;
+}
+
+.summary-card .value{
+    font-size:22px;
+    font-weight:700;
+}
+
+.green{color:#2e7d32}
+.red{color:#c62828}
+.gold{color:#f2b705}
+.blue{color:#1565c0}
+
+/* ====== BOX ====== */
+.chart-box,.table-box{
+    background:#ffffff;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:20px;
+    margin-bottom:20px;
+}
+
+.chart-box h3,.table-box h3{
+    margin:0 0 15px;
+    font-size:18px;
+    color:#222;
+}
+
+/* ====== PERIOD SELECT ====== */
+.period-filter{
+    margin-bottom:15px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.period-filter label{
+    font-weight:600;
+    color:#444;
+}
+
+.period-filter select{
+    padding:8px 12px;
+    border:2px solid #f2b705;
+    border-radius:6px;
+    font-size:14px;
+    font-weight:600;
+    background:#fff;
+    color:#222;
+    cursor:pointer;
+}
+
+.period-filter select:focus{
+    outline:none;
+    border-color:#e6ac00;
+}
+
+/* ====== TABLE ====== */
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+}
+
+th{
+    background:#e6ac00;
+    color:#000;
+    padding:10px;
+    border:1px solid #d4a000;
+}
+
+td{
+    padding:8px;
+    border:1px solid #e0e0e0;
+    text-align:center;
+}
+
+tr:nth-child(even){background:#fafafa}
+
+.rank-1{background:#fff3cd}
+.rank-2{background:#f1f1f1}
+.rank-3{background:#fbe9e7}
+
+.period-badge{
+    background:#fff3cd;
+    color:#8a6d00;
+    padding:3px 7px;
+    border-radius:4px;
+    font-weight:600;
+}
+
+/* ====== LOADING ====== */
+.loading-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.4);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    z-index:999;
+}
+.loading-overlay.show{display:flex}
+
+.spinner{
+    width:45px;height:45px;
+    border:4px solid #eee;
+    border-top:4px solid #f2b705;
+    border-radius:50%;
+    animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ====== NOTIFICATION ====== */
+.notification{
+    position:fixed;
+    top:20px;
+    right:20px;
+    padding:14px 18px;
+    background:#2e7d32;
+    color:#fff;
+    border-radius:6px;
+    display:none;
+}
+.notification.show{display:block}
+.notification.error{background:#c62828}
+
+/* ẨN SETUP NHẬP LINK */
+#setupBanner {
+    display: none !important;
+}
+
+/* Ẩn bảng chi tiết */
+#detailBox {
+    display: none;
+}
+
+
+</style>
+</head>
+
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<header>
+    <h1>Dashboard Equity DTV HOLDINGS</h1>
+    <div class="controls">
+        <button class="btn btn-primary" onclick="forceRefresh()">🔄 Làm mới</button>
+        <button class="btn btn-secondary" id="autoRefreshBtn" onclick="toggleAutoRefresh()">⏸️ Tạm dừng</button>
+        <div class="status">
+            <span class="status-dot success" id="statusDot"></span>
+            <span id="statusText">Chưa kết nối</span>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- SETUP BANNER -->
+    <div class="setup-banner" id="setupBanner">
+        <h3>📝 Nhập Link CSV Google Sheets</h3>
+        
+        <label>🔗 Link CSV:</label>
+        <input type="text" id="csvUrlInput" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv">
+        
+        <button onclick="saveCsvUrl()">💾 LƯU VÀ TẢI DỮ LIỆU</button>
+    </div>
+
+    <div class="info-banner">
+        <div class="info-item">
+            <strong>⏰ Cập nhật:</strong> <span id="lastUpdate">Chưa tải</span>
+        </div>
+        <div class="info-item">
+            <strong>🔄 Tự động:</strong> Mỗi <span id="intervalTime">5</span>phút
+        </div>
+        <div class="info-item">
+            <strong>📊 Số lần tải:</strong> <span id="loadCount">0</span>
+        </div>
+        <div class="info-item">
+            <strong>🔗 Trạng thái:</strong> <span id="connectionStatus" style="color: #666;">Chưa kết nối</span>
+        </div>
+    </div>
+
+    <!-- TỔNG KẾT -->
+    <div class="summary">
+        <div class="summary-card">
+            <div class="label">💰 Tổng Equity Đầu Kỳ</div>
+            <div class="value gold" id="sumEquityStart">0</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">💵 Tổng Equity Hiện Tại</div>
+            <div class="value blue" id="sumEquityNow">0</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">📈 Tổng PnL</div>
+            <div class="value green" id="sumPnL">0</div>
+        </div>
+        <div class="summary-card">
+            <div class="label">📊 % Trung Bình</div>
+            <div class="value" id="avgPercent">0%</div>
+        </div>
+    </div>
+
+    <!-- BẢNG CHI TIẾT -->
+    <div class="table-box" id="detailBox">
+        <h3>📋 Bảng chi tiết theo kỳ</h3>
+        <table id="detailTable">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Account</th>
+                    <th>Kỳ</th>
+                    <th>Equity Đầu Kỳ</th>
+                    <th>Equity Hiện Tại</th>
+                    <th>In</th>
+                    <th>Out</th>
+                    <th>PnL</th>
+                    <th>%</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="9" style="padding: 30px; color: #999;">👆 Vui lòng nhập Link CSV ở trên...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- BẢNG XẾP HẠNG -->
+    <div class="table-box">
+        <h3>🏆 Bảng Xếp Hạng PnL</h3>
+        
+        <!-- Thêm select để chọn năm, tháng và kỳ -->
+        <div class="period-filter">
+            <label>📅 Chọn năm:</label>
+            <select id="yearSelect" onchange="updateMonthsByYear()">
+                <option value="all">Tất cả năm</option>
+            </select>
+            
+            <label style="margin-left: 15px;">📅 Chọn tháng:</label>
+            <select id="monthSelect" onchange="updatePeriodsByMonth()">
+                <option value="all">Tất cả tháng</option>
+            </select>
+            
+            <label style="margin-left: 15px;">📊 Chọn kỳ:</label>
+            <select id="periodSelect" onchange="updateRankTable()">
+                <option value="all">Tổng (Tất cả kỳ)</option>
+            </select>
+        </div>
+        
+        <table id="rankTable">
+            <thead>
+                <tr>
+                    <th>Hạng</th>
+                    <th>Account</th>
+                    <th>Equity Đầu Kỳ</th>
+                    <th>Equity Hiện Tại</th>
+                    <th>PnL</th>
+                    <th>% Lãi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="6" style="padding: 30px; color: #999;">Đang chờ dữ liệu...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+let eqPnLChart;
+let autoRefreshInterval;
+let isAutoRefresh = true;
+let loadCount = 0;
+let lastDataHash = "";
+let refreshIntervalSeconds = 300;
+let CSV_URL = "";
+
+// Biến toàn cục để lưu dữ liệu theo kỳ
+let periodData = {};
+let accountSummaryData = {};
+let allPeriodsArray = []; // Lưu tất cả các kỳ
+let availableMonths = new Set(); // Lưu các tháng có dữ liệu
+let availableYears = new Set(); // Lưu các năm có dữ liệu
+let periodToMonthYear = {}; // Map period -> {month, year}
+
+function init() {
+    CSV_URL = localStorage.getItem('binanceCsvUrl') || "";
+    document.getElementById('csvUrlInput').value = CSV_URL;
+    
+    if (CSV_URL) {
+        document.getElementById('connectionStatus').innerHTML = '<span style="color: #28a745;">✅ Đã kết nối</span>';
+        document.getElementById('setupBanner').style.display = 'none';
+        forceRefresh();
+        startAutoRefresh();
+    } else {
+        showSetup();
+    }
+}
+
+function showSetup() {
+    document.getElementById('setupBanner').style.display = 'block';
+}
+
+function saveCsvUrl() {
+    const url = document.getElementById('csvUrlInput').value.trim();
+    
+    if (!url) {
+        showNotification('⚠️ Vui lòng nhập Link CSV!', 'error');
+        return;
+    }
+    
+    if (!url.includes('docs.google.com')) {
+        showNotification('⚠️ Link không hợp lệ! Phải là link từ Google Sheets', 'error');
+        return;
+    }
+    
+    CSV_URL = url;
+    localStorage.setItem('binanceCsvUrl', url);
+    
+    document.getElementById('setupBanner').style.display = 'none';
+    document.getElementById('connectionStatus').innerHTML = '<span style="color: #28a745;">✅ Đã kết nối</span>';
+    
+    showNotification('✅ Đang tải dữ liệu...');
+    forceRefresh();
+    startAutoRefresh();
+}
+
+function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    const result = [];
+    
+    for (let line of lines) {
+        const row = [];
+        let cell = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                row.push(cell.trim());
+                cell = '';
+            } else {
+                cell += char;
+            }
+        }
+        row.push(cell.trim());
+        result.push(row);
+    }
+    
+    return result;
+}
+
+function simpleHash(str) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash = hash & hash;
+    }
+    return Math.abs(hash).toString(16).substring(0, 8);
+}
+
+function updateStatus(status, message) {
+    const dot = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    dot.className = `status-dot ${status}`;
+    text.textContent = message;
+}
+
+function showNotification(message, type = 'success') {
+    const notif = document.getElementById('notification');
+    notif.textContent = message;
+    notif.className = `notification show ${type}`;
+    setTimeout(() => notif.classList.remove('show'), 4000);
+}
+
+async function forceRefresh() {
+    if (!CSV_URL) {
+        showNotification('⚠️ Chưa có Link CSV!', 'error');
+        showSetup();
+        return;
+    }
+    
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.add('show');
+    updateStatus('loading', 'Đang tải...');
+    
+    try {
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(7);
+        
+        let text = null;
+        let method = "";
+        
+        // Method 1: Fetch trực tiếp
+        try {
+            const directUrl = `${CSV_URL}&t=${timestamp}&r=${random}`;
+            const response = await fetch(directUrl, {
+                method: 'GET',
+                mode: 'cors',
+                credentials: 'omit',
+                headers: {
+                    'Accept': 'text/csv, text/plain, */*'
+                }
+            });
+            
+            if (response.ok) {
+                text = await response.text();
+                method = "Direct Fetch";
+            }
+        } catch(e) {
+            console.log("Method 1 failed:", e);
+        }
+        
+        // Method 2: CORS Proxy
+        if (!text) {
+            try {
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(CSV_URL)}`;
+                const response = await fetch(proxyUrl);
+                
+                if (response.ok) {
+                    text = await response.text();
+                    method = "CORS Proxy";
+                }
+            } catch(e) {
+                console.log("Method 2 failed:", e);
+            }
+        }
+        
+        // Method 3: Alternative proxy
+        if (!text) {
+            try {
+                const altProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(CSV_URL)}`;
+                const response = await fetch(altProxyUrl);
+                
+                if (response.ok) {
+                    text = await response.text();
+                    method = "AllOrigins Proxy";
+                }
+            } catch(e) {
+                console.log("Method 3 failed:", e);
+            }
+        }
+        
+        if (!text) {
+            throw new Error('Không thể tải dữ liệu. Vui lòng kiểm tra:\n1. Link CSV có đúng không?\n2. Sheet đã Publish chưa?\n3. Thử bấm "Làm mới" lại');
+        }
+        
+        const rows = parseCSV(text);
+        
+        const dataString = text;
+        const newHash = simpleHash(dataString);
+        
+        if (newHash !== lastDataHash && lastDataHash !== "") {
+            showNotification(`✅ Dữ liệu mới! (${method})`);
+        }
+        
+        lastDataHash = newHash;
+        
+        const validRows = rows.slice(1).filter(r => r.length > 5 && r[1] && r[4]);
+        
+        if (validRows.length === 0) {
+            throw new Error('Sheet không có dữ liệu hợp lệ');
+        }
+        
+        processDashboard(validRows);
+        
+        loadCount++;
+        document.getElementById('loadCount').textContent = loadCount;
+        
+        const now = new Date();
+        document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('vi-VN') + ` (${method})`;
+        
+        updateStatus('success', '✅ Thành công');
+        
+    } catch(e) {
+        console.error("Error:", e);
+        updateStatus('error', 'Lỗi');
+        showNotification('❌ ' + e.message, 'error');
+    } finally {
+        overlay.classList.remove('show');
+    }
+}
+
+function toggleAutoRefresh() {
+    isAutoRefresh = !isAutoRefresh;
+    const btn = document.getElementById('autoRefreshBtn');
+    
+    if (isAutoRefresh) {
+        btn.textContent = '⏸️ Tạm dừng';
+        btn.className = 'btn btn-secondary';
+        startAutoRefresh();
+        showNotification('▶️ Đã bật tự động');
+    } else {
+        btn.textContent = '▶️ Bật tự động';
+        btn.className = 'btn btn-primary';
+        stopAutoRefresh();
+        showNotification('⏸️ Đã tạm dừng');
+    }
+}
+
+function startAutoRefresh() {
+    if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+    autoRefreshInterval = setInterval(forceRefresh, refreshIntervalSeconds * 1000);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
+function extractMonthAndYearFromRow(row) {
+    // Đọc trực tiếp từ cột "Tháng" (index 10) và "Năm" (index 11)
+    let month = null;
+    let year = null;
+    
+    // Cột Tháng
+    if (row[10]) {
+        const monthStr = String(row[10]).trim();
+        if (monthStr) {
+            month = parseInt(monthStr);
+            if (isNaN(month) || month < 1 || month > 12) {
+                month = null;
+            }
+        }
+    }
+    
+    // Cột Năm
+    if (row[11]) {
+        const yearStr = String(row[11]).trim();
+        if (yearStr) {
+            year = parseInt(yearStr);
+            if (isNaN(year) || year < 2000 || year > 2100) {
+                year = null;
+            }
+        }
+    }
+    
+    // Backup: Nếu không có giá trị, thử extract từ cột "Kỳ"
+    if (!month || !year) {
+        const period = String(row[2] || "").trim();
+        const { months, years } = extractMonthsAndYearsFromPeriod(period);
+        
+        if (!month && months.length > 0) {
+            month = months[0]; // Lấy tháng đầu tiên
+        }
+        if (!year && years.length > 0) {
+            year = years[0]; // Lấy năm đầu tiên
+        }
+    }
+    
+    return { month, year };
+}
+
+function extractMonthsAndYearsFromPeriod(period) {
+    // Trích xuất tháng và năm từ cột "Kỳ" (backup method)
+    const months = [];
+    const years = [];
+    
+    const periodStr = String(period);
+    
+    // Pattern 1: DD/MM/YYYY-DD/MM/YYYY (có năm)
+    const dateWithYearMatches = periodStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/g);
+    if (dateWithYearMatches) {
+        for (let dateStr of dateWithYearMatches) {
+            const parts = dateStr.split('/');
+            if (parts.length >= 3) {
+                const monthInDate = parseInt(parts[1]);
+                const yearInDate = parseInt(parts[2]);
+                
+                if (monthInDate >= 1 && monthInDate <= 12 && !months.includes(monthInDate)) {
+                    months.push(monthInDate);
+                }
+                if (yearInDate >= 2000 && yearInDate <= 2100 && !years.includes(yearInDate)) {
+                    years.push(yearInDate);
+                }
+            }
+        }
+    }
+    
+    // Pattern 2: DD/MM-DD/MM (không có năm) - ví dụ "1/12-14/12" hoặc "15/12-31/12"
+    if (months.length === 0) {
+        const dateWithoutYearMatches = periodStr.match(/(\d{1,2})\/(\d{1,2})/g);
+        if (dateWithoutYearMatches) {
+            for (let dateStr of dateWithoutYearMatches) {
+                const parts = dateStr.split('/');
+                if (parts.length >= 2) {
+                    const monthInDate = parseInt(parts[1]);
+                    if (monthInDate >= 1 && monthInDate <= 12 && !months.includes(monthInDate)) {
+                        months.push(monthInDate);
+                    }
+                }
+            }
+        }
+    }
+    
+    console.log(`Extract from period "${periodStr}": months=[${months}], years=[${years}]`);
+    
+    return { months, years };
+}
+
+function checkPeriodMatchesFilter(period, month, year, rowMonth, rowYear) {
+    // So sánh trực tiếp với tháng/năm từ cột dữ liệu
+    
+    // Nếu chọn "Tất cả"
+    if (month === null && year === null) return true;
+    
+    // Nếu chỉ chọn năm
+    if (month === null && year !== null) {
+        return rowYear === year;
+    }
+    
+    // Nếu chỉ chọn tháng
+    if (month !== null && year === null) {
+        return rowMonth === month;
+    }
+    
+    // Nếu chọn cả tháng và năm
+    return rowMonth === month && rowYear === year;
+}
+
+function updateMonthsByYear() {
+    const selectedYear = document.getElementById('yearSelect').value;
+    const monthSelect = document.getElementById('monthSelect');
+    
+    // Lưu giá trị hiện tại
+    const currentValue = monthSelect.value;
+    
+    // Reset month select
+    monthSelect.innerHTML = '<option value="all">Tất cả tháng</option>';
+    
+    // Lọc các kỳ theo năm đã chọn
+    let monthsInYear = new Set();
+    
+    if (selectedYear === 'all') {
+        // Hiển thị tất cả tháng có trong dữ liệu
+        monthsInYear = availableMonths;
+    } else {
+        const year = parseInt(selectedYear);
+        
+        // Lấy các tháng từ các period có năm tương ứng
+        allPeriodsArray.forEach(period => {
+            const periodInfo = periodToMonthYear[period];
+            if (periodInfo && periodInfo.year === year && periodInfo.month) {
+                monthsInYear.add(periodInfo.month);
+            }
+        });
+    }
+    
+    // Sắp xếp và thêm vào select
+    const monthsArray = Array.from(monthsInYear).sort((a, b) => a - b);
+    
+    console.log('Months for year', selectedYear, ':', monthsArray);
+    
+    monthsArray.forEach(month => {
+        const option = document.createElement('option');
+        option.value = month.toString();
+        option.textContent = `Tháng ${month}`;
+        monthSelect.appendChild(option);
+    });
+    
+    // Khôi phục giá trị đã chọn nếu còn tồn tại
+    if (Array.from(monthSelect.options).some(opt => opt.value === currentValue)) {
+        monthSelect.value = currentValue;
+    }
+    
+    // Cập nhật danh sách kỳ
+    updatePeriodsByMonth();
+}
+
+function updatePeriodsByMonth() {
+    const selectedYear = document.getElementById('yearSelect').value;
+    const selectedMonth = document.getElementById('monthSelect').value;
+    const periodSelect = document.getElementById('periodSelect');
+    
+    // Lưu giá trị hiện tại
+    const currentValue = periodSelect.value;
+    
+    // Reset period select
+    periodSelect.innerHTML = '<option value="all">Tổng (Tất cả kỳ)</option>';
+    
+    const year = selectedYear === 'all' ? null : parseInt(selectedYear);
+    const month = selectedMonth === 'all' ? null : parseInt(selectedMonth);
+    
+    // Filter periods theo year và month
+    const filteredPeriods = allPeriodsArray.filter(period => {
+        const periodInfo = periodToMonthYear[period];
+        if (!periodInfo) return false;
+        
+        // Nếu chọn "Tất cả"
+        if (year === null && month === null) return true;
+        
+        // Nếu chỉ chọn năm
+        if (year !== null && month === null) {
+            return periodInfo.year === year;
+        }
+        
+        // Nếu chỉ chọn tháng (không chọn năm)
+        if (year === null && month !== null) {
+            return periodInfo.month === month;
+        }
+        
+        // Nếu chọn cả năm và tháng
+        return periodInfo.year === year && periodInfo.month === month;
+    });
+    
+    console.log('Filtered periods:', filteredPeriods);
+    
+    // Thêm các kỳ đã filter vào select
+    filteredPeriods.forEach(period => {
+        const option = document.createElement('option');
+        option.value = period;
+        option.textContent = period;
+        periodSelect.appendChild(option);
+    });
+    
+    // Khôi phục giá trị đã chọn nếu còn tồn tại
+    if (Array.from(periodSelect.options).some(opt => opt.value === currentValue)) {
+        periodSelect.value = currentValue;
+    }
+    
+    // Cập nhật bảng xếp hạng
+    updateRankTable();
+}
+
+function processDashboard(data) {
+    // Reset dữ liệu
+    periodData = {};
+    accountSummaryData = {};
+    allPeriodsArray = [];
+    availableMonths = new Set();
+    availableYears = new Set();
+    periodToMonthYear = {};
+    
+    // Group data by account và period
+    let accountData = {};
+    let allPeriods = new Set();
+    
+    // Pass 1: Đọc tất cả dữ liệu và build periodToMonthYear mapping
+    data.forEach(r => {
+        if (!r[1]) return;
+        
+        let period = String(r[2]).trim();
+        if (!period) return;
+        
+        allPeriods.add(period);
+        
+        // Đọc tháng và năm từ cột dữ liệu
+        const { month, year } = extractMonthAndYearFromRow(r);
+        
+        // Nếu chưa có mapping cho period này, hoặc mapping hiện tại chưa đầy đủ
+        if (!periodToMonthYear[period] || 
+            (!periodToMonthYear[period].month && month) || 
+            (!periodToMonthYear[period].year && year)) {
+            
+            periodToMonthYear[period] = {
+                month: month || periodToMonthYear[period]?.month || null,
+                year: year || periodToMonthYear[period]?.year || null
+            };
+        }
+    });
+    
+    // Pass 2: Với các period chưa có đầy đủ month/year, thử extract từ tên period
+    allPeriods.forEach(period => {
+        if (!periodToMonthYear[period] || !periodToMonthYear[period].month || !periodToMonthYear[period].year) {
+            const { months, years } = extractMonthsAndYearsFromPeriod(period);
+            
+            if (!periodToMonthYear[period]) {
+                periodToMonthYear[period] = { month: null, year: null };
+            }
+            
+            if (!periodToMonthYear[period].month && months.length > 0) {
+                periodToMonthYear[period].month = months[0];
+            }
+            
+            if (!periodToMonthYear[period].year && years.length > 0) {
+                periodToMonthYear[period].year = years[0];
+            }
+        }
+    });
+    
+    // Pass 2.5: Với các period có tháng nhưng không có năm, 
+    // thử tìm năm từ các period khác cùng tháng
+    allPeriods.forEach(period => {
+        const periodInfo = periodToMonthYear[period];
+        
+        if (periodInfo && periodInfo.month && !periodInfo.year) {
+            // Tìm period khác cùng tháng có năm
+            for (let otherPeriod of allPeriods) {
+                const otherInfo = periodToMonthYear[otherPeriod];
+                if (otherInfo && otherInfo.month === periodInfo.month && otherInfo.year) {
+                    periodInfo.year = otherInfo.year;
+                    console.log(`Inferred year ${otherInfo.year} for period "${period}" from "${otherPeriod}"`);
+                    break;
+                }
+            }
+        }
+        
+        // Thu thập các tháng và năm có trong dữ liệu
+        if (periodInfo.month) {
+            availableMonths.add(periodInfo.month);
+        }
+        if (periodInfo.year) {
+            availableYears.add(periodInfo.year);
+        }
+    });
+    
+    console.log('Period to Month/Year mapping after processing:', periodToMonthYear);
+    
+    // Pass 3: Xử lý dữ liệu chính
+    data.forEach(r => {
+        if (!r[1]) return;
+        
+        let stt = parseInt(r[0]) || 0;
+        let account = String(r[1]).trim();
+        let period = String(r[2]).trim();
+        let equityStart = parseFloat(String(r[4]).replace(/"/g,"").replace(",", ".")) || 0;
+        let equityNow = parseFloat(String(r[5]).replace(/"/g,"").replace(",", ".")) || 0;
+        let inAmount = parseFloat(String(r[6]).replace(/"/g,"").replace(",", ".")) || 0;
+        let outAmount = parseFloat(String(r[7]).replace(/"/g,"").replace(",", ".")) || 0;
+        let pnl = parseFloat(String(r[8]).replace(/"/g,"").replace(",", ".")) || 0;
+        let percent = String(r[9] || "").trim();
+
+        // Lấy month/year từ mapping đã build
+        const periodInfo = periodToMonthYear[period] || { month: null, year: null };
+        const month = periodInfo.month;
+        const year = periodInfo.year;
+
+        if (!accountData[account]) {
+            accountData[account] = [];
+        }
+        
+        accountData[account].push({
+            stt,
+            account,
+            period,
+            month,
+            year,
+            equityStart,
+            equityNow,
+            inAmount,
+            outAmount,
+            pnl,
+            percent
+        });
+        
+        // Lưu dữ liệu theo kỳ
+        if (!periodData[period]) {
+            periodData[period] = {};
+        }
+        if (!periodData[period][account]) {
+            periodData[period][account] = {
+                equityStart: 0,
+                equityNow: 0,
+                pnl: 0,
+                percent: percent,
+                month: month,
+                year: year
+            };
+        }
+        
+        periodData[period][account] = {
+            equityStart: equityStart,
+            equityNow: equityNow,
+            pnl: pnl,
+            percent: percent,
+            month: month,
+            year: year
+        };
+    });
+    
+    // Lưu tất cả các kỳ đã sắp xếp
+    allPeriodsArray = Array.from(allPeriods).sort();
+    
+    console.log('Available months:', Array.from(availableMonths).sort());
+    console.log('Available years:', Array.from(availableYears).sort());
+    console.log('All periods:', allPeriodsArray);
+    
+    // Cập nhật select năm, tháng và kỳ
+    updateYearSelect();
+    updateMonthsByYear();
+    
+    // Tính toán tổng hợp
+    let sumEquityStart = 0;
+    let sumEquityNow = 0;
+    let sumPnL = 0;
+    let allRows = [];
+    
+    Object.keys(accountData).forEach(account => {
+        let periods = accountData[account];
+        periods.sort((a, b) => a.stt - b.stt);
+        
+        let firstPeriod = periods[0];
+        let lastPeriod = periods[periods.length - 1];
+        
+        let totalPnL = periods.reduce((sum, p) => sum + p.pnl, 0);
+        
+        accountSummaryData[account] = {
+            equityStart: firstPeriod.equityStart,
+            equityNow: lastPeriod.equityNow,
+            totalPnL: totalPnL,
+            count: periods.length
+        };
+        
+        sumEquityStart += firstPeriod.equityStart;
+        sumEquityNow += lastPeriod.equityNow;
+        sumPnL += totalPnL;
+        
+        allRows = allRows.concat(periods);
+    });
+    
+    const avgPercent = sumEquityStart > 0 ? ((sumPnL / sumEquityStart) * 100).toFixed(2) : 0;
+
+    document.getElementById("sumEquityStart").textContent = sumEquityStart.toLocaleString("vi-VN", {minimumFractionDigits: 2});
+    document.getElementById("sumEquityNow").textContent = sumEquityNow.toLocaleString("vi-VN", {minimumFractionDigits: 2});
+    
+    const pnlElement = document.getElementById("sumPnL");
+    pnlElement.textContent = sumPnL.toLocaleString("vi-VN", {minimumFractionDigits: 2});
+    pnlElement.className = sumPnL >= 0 ? "value green" : "value red";
+
+    const avgElement = document.getElementById("avgPercent");
+    avgElement.textContent = avgPercent + "%";
+    avgElement.className = avgPercent >= 0 ? "value green" : "value red";
+
+    drawDetailTable(allRows);
+    updateRankTable();
+}
+
+function updatePeriodSelect(periods) {
+    const select = document.getElementById('periodSelect');
+    
+    // Lưu giá trị hiện tại
+    const currentValue = select.value;
+    
+    // Xóa các option cũ (trừ "Tổng")
+    select.innerHTML = '<option value="all">Tổng (Tất cả kỳ)</option>';
+    
+    // Thêm các kỳ mới
+    periods.forEach(period => {
+        const option = document.createElement('option');
+        option.value = period;
+        option.textContent = period;
+        select.appendChild(option);
+    });
+    
+    // Khôi phục giá trị đã chọn nếu còn tồn tại
+    if (Array.from(select.options).some(opt => opt.value === currentValue)) {
+        select.value = currentValue;
+    }
+}
+
+function updateYearSelect() {
+    const yearSelect = document.getElementById('yearSelect');
+    
+    // Lưu giá trị hiện tại
+    const currentValue = yearSelect.value;
+    
+    // Reset year select
+    yearSelect.innerHTML = '<option value="all">Tất cả năm</option>';
+    
+    // Chuyển Set thành Array và sắp xếp (năm mới nhất trước)
+    let yearsArray = Array.from(availableYears).sort((a, b) => b - a);
+    
+    console.log('Các năm hiển thị trong select:', yearsArray);
+    
+    // Thêm các năm vào select
+    yearsArray.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year.toString();
+        option.textContent = `Năm ${year}`;
+        yearSelect.appendChild(option);
+    });
+    
+    // Khôi phục giá trị đã chọn nếu còn tồn tại
+    if (Array.from(yearSelect.options).some(opt => opt.value === currentValue)) {
+        yearSelect.value = currentValue;
+    }
+}
+
+function updateRankTable() {
+    const selectedYear = document.getElementById('yearSelect').value;
+    const selectedMonth = document.getElementById('monthSelect').value;
+    const selectedPeriod = document.getElementById('periodSelect').value;
+    
+    const rankTableBox = document.querySelector('#rankTable').closest('.table-box');
+    
+    if (selectedPeriod === 'all') {
+        // Nếu chọn "Tổng" - tính tổng theo filter năm/tháng
+        const year = selectedYear === 'all' ? null : parseInt(selectedYear);
+        const month = selectedMonth === 'all' ? null : parseInt(selectedMonth);
+        
+        // Filter periods theo year và month
+        const filteredPeriods = allPeriodsArray.filter(period => {
+            const periodInfo = periodToMonthYear[period];
+            if (!periodInfo) return false;
+            
+            // Nếu chọn "Tất cả"
+            if (year === null && month === null) return true;
+            
+            // Nếu chỉ chọn năm
+            if (year !== null && month === null) {
+                return periodInfo.year === year;
+            }
+            
+            // Nếu chỉ chọn tháng
+            if (year === null && month !== null) {
+                return periodInfo.month === month;
+            }
+            
+            // Nếu chọn cả năm và tháng
+            return periodInfo.year === year && periodInfo.month === month;
+        });
+        
+        console.log('Periods for rank table:', filteredPeriods);
+        
+        if (filteredPeriods.length === 0) {
+            // Không có dữ liệu - ẩn bảng
+            rankTableBox.style.display = 'none';
+            console.log('No data found - hiding rank table');
+            return;
+        }
+        
+        // Tính tổng từ các periods đã filter
+        const summaryData = calculateSummaryFromPeriods(filteredPeriods);
+        
+        if (Object.keys(summaryData).length === 0) {
+            rankTableBox.style.display = 'none';
+            console.log('Empty summary data - hiding rank table');
+            return;
+        }
+        
+        rankTableBox.style.display = 'block';
+        drawRankTable(summaryData, 'Tổng');
+    } else {
+        // Hiển thị theo kỳ cụ thể
+        if (periodData[selectedPeriod]) {
+            rankTableBox.style.display = 'block';
+            drawRankTable(periodData[selectedPeriod], selectedPeriod);
+        } else {
+            // Không có dữ liệu - ẩn bảng
+            rankTableBox.style.display = 'none';
+            console.log('No data for period', selectedPeriod, '- hiding rank table');
+        }
+    }
+}
+
+function calculateSummaryFromPeriods(periods) {
+    // Tính toán tổng hợp từ các periods được chọn
+    const summary = {};
+    
+    periods.forEach(period => {
+        if (periodData[period]) {
+            Object.keys(periodData[period]).forEach(account => {
+                if (!summary[account]) {
+                    summary[account] = {
+                        equityStart: 0,
+                        equityNow: 0,
+                        totalPnL: 0
+                    };
+                }
+                
+                const data = periodData[period][account];
+                // Lấy equity đầu từ period đầu tiên
+                if (summary[account].equityStart === 0) {
+                    summary[account].equityStart = data.equityStart;
+                }
+                // Cập nhật equity cuối từ period mới nhất
+                summary[account].equityNow = data.equityNow;
+                // Cộng dồn PnL
+                summary[account].totalPnL += data.pnl;
+            });
+        }
+    });
+    
+    return summary;
+}
+
+function drawDetailTable(rows) {
+    rows.sort((a, b) => a.stt - b.stt);
+    
+    let html = "";
+    rows.forEach((row) => {
+        let pnlColor = row.pnl >= 0 ? "green" : "red";
+        
+        html += `
+            <tr>
+                <td><strong>${row.stt}</strong></td>
+                <td><strong>${row.account}</strong></td>
+                <td><span class="period-badge">${row.period}</span></td>
+                <td>${row.equityStart.toLocaleString("vi-VN", {minimumFractionDigits: 2})}</td>
+                <td>${row.equityNow.toLocaleString("vi-VN", {minimumFractionDigits: 2})}</td>
+                <td>${row.inAmount.toLocaleString("vi-VN", {minimumFractionDigits: 2})}</td>
+                <td>${row.outAmount.toLocaleString("vi-VN", {minimumFractionDigits: 2})}</td>
+                <td class="${pnlColor}"><strong>${row.pnl.toLocaleString("vi-VN", {minimumFractionDigits: 2})}</strong></td>
+                <td class="${pnlColor}"><strong>${row.percent}</strong></td>
+            </tr>
+        `;
+    });
+
+    document.querySelector("#detailTable tbody").innerHTML = html;
+}
+
+function drawRankTable(dataToRank, periodLabel) {
+    let accounts;
+    
+    // Kiểm tra nếu không có dữ liệu
+    if (!dataToRank || Object.keys(dataToRank).length === 0) {
+        document.querySelector("#rankTable tbody").innerHTML = 
+            '<tr><td colspan="6" style="padding: 30px; color: #999;">⚠️ Không có dữ liệu cho lựa chọn này</td></tr>';
+        return;
+    }
+    
+    if (periodLabel === 'Tổng') {
+        // Xếp hạng theo tổng PnL
+        accounts = Object.keys(dataToRank).map(acc => ({
+            account: acc,
+            equityStart: dataToRank[acc].equityStart,
+            equityNow: dataToRank[acc].equityNow,
+            pnl: dataToRank[acc].totalPnL,
+            profitPercent: dataToRank[acc].equityStart > 0 
+                ? ((dataToRank[acc].totalPnL / dataToRank[acc].equityStart) * 100).toFixed(2)
+                : 0
+        }));
+    } else {
+        // Xếp hạng theo kỳ cụ thể
+        accounts = Object.keys(dataToRank).map(acc => ({
+            account: acc,
+            equityStart: dataToRank[acc].equityStart,
+            equityNow: dataToRank[acc].equityNow,
+            pnl: dataToRank[acc].pnl,
+            profitPercent: dataToRank[acc].equityStart > 0 
+                ? ((dataToRank[acc].pnl / dataToRank[acc].equityStart) * 100).toFixed(2)
+                : dataToRank[acc].percent.replace('%', '') || 0
+        }));
+    }
+
+    accounts.sort((a, b) => b.pnl - a.pnl);
+
+    let html = "";
+    accounts.forEach((item, i) => {
+        let pnlColor = item.pnl >= 0 ? "green" : "red";
+        let rankIcon = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : (i + 1);
+        let rowClass = i < 3 ? `rank-${i+1}` : '';
+        
+        html += `
+            <tr class="${rowClass}">
+                <td><strong>${rankIcon}</strong></td>
+                <td><strong>${item.account}</strong></td>
+                <td>${item.equityStart.toLocaleString("vi-VN", {minimumFractionDigits: 2})}</td>
+                <td>${item.equityNow.toLocaleString("vi-VN", {minimumFractionDigits: 2})}</td>
+                <td class="${pnlColor}"><strong>${item.pnl.toLocaleString("vi-VN", {minimumFractionDigits: 2})}</strong></td>
+                <td class="${pnlColor}"><strong>${item.profitPercent}%</strong></td>
+            </tr>
+        `;
+    });
+
+    document.querySelector("#rankTable tbody").innerHTML = html;
+}
+
+init();
+
+</script>
+
+</body>
+</html>
